@@ -1,0 +1,56 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build-tauri:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      NEURA_DIST_DIR: dist
+      NEURA_APP_NAME: neura
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Compute npm cache dir
+        shell: bash
+        run: echo "NPM_CACHE_DIR=$(npm config get cache)" >> $GITHUB_ENV
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NPM_CACHE_DIR }}
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+      - name: Install Node deps
+        run: npm ci
+      - name: Build core
+        run: npm run build
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Compute cargo home
+        shell: bash
+        run: echo "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" >> $GITHUB_ENV
+      - name: Cache cargo registry+git
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.CARGO_HOME }}/registry
+            ${{ env.CARGO_HOME }}/git
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+      - name: Build Tauri bundles
+        uses: tauri-apps/tauri-action@v2
+        with:
+          projectPath: src-tauri
+          args: '--ci'
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: neura-${{ matrix.os }}
+          path: src-tauri/target/**/bundle/**

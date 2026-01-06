@@ -1,0 +1,28 @@
+{
+  "name": "neura-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "example": "node dist/examples/minimal.js",
+    "test:engine": "node dist/tests/TauriAudioEngine.basic.js",
+    "bench": "node dist/benchmarks/audioEngine.bench.js",
+    "example:native": "node dist/examples/native_adapter_usage.js",
+    "dev": "npm run desktop:dev",
+    "desktop:dev": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\\dev-desktop.ps1",
+    "desktop:build": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\\build-desktop.ps1",
+    "desktop:verify": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\\verify-plugin.ps1",
+    "ui:dev": "vite --config ui/vite.config.ts",
+    "ui:build": "vite build --config ui/vite.config.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "@preact/preset-vite": "^2.7.0"
+  },
+  "dependencies": {
+    "preact": "^10.20.2"
+  }
+}

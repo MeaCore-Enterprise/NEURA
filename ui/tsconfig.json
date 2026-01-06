@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["preact", "preact/jsx-runtime", "vite/client", "node"]
+  },
+  "include": ["./src/**/*.tsx", "./src/**/*.ts"]
+}

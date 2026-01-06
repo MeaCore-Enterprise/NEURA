@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": false,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "lib": ["ES2020", "DOM"],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["core/**/*.ts", "examples/**/*.ts", "tests/**/*.ts", "benchmarks/**/*.ts"],
+  "exclude": ["node_modules"]
+}

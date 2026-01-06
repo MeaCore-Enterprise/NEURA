@@ -1,0 +1,11 @@
+[package]
+name = "neura-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2", features = ["macros"] }
+tauri-plugin-neura-audio = { path = "../tauri-plugin-neura-audio" }
+
+[build-dependencies]
+tauri-build = { version = "2" }
