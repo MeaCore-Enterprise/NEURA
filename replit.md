@@ -39,6 +39,19 @@ Reproductor de audio de escritorio multiplataforma. Construido con Preact + Vite
 | `↑` | Subir volumen +5% |
 | `↓` | Bajar volumen -5% |
 
+## Carga de archivos locales
+
+- **Botón "Abrir archivos"**: selector del sistema para cargar MP3, FLAC, WAV, OGG, AAC, M4A
+- **Arrastrar y soltar**: arrastra archivos directamente sobre el panel de lista
+- **Clic en el área vacía**: haz clic para abrir el selector si no hay pistas cargadas
+- **Botón "+ Añadir"**: una vez que tienes pistas, agrega más sin reemplazar la lista
+
+### Optimización de memoria
+- Los archivos se almacenan como `blob://` URLs en el navegador (no se suben a ningún servidor)
+- La duración se detecta automáticamente de los metadatos del archivo
+- Al cargar una nueva lista, las URLs anteriores se liberan automáticamente
+- Las URLs blob se limpian completamente al cerrar la pestaña o aplicación
+
 ## Desarrollo
 
 ```bash

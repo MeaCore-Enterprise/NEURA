@@ -16,12 +16,32 @@ function stemName(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
 }
 
-function getAudioDuration(url: string): Promise<number> {
+async function getAudioDuration(url: string): Promise<number> {
+  if (!url.startsWith("blob:")) {
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      const contentLength = response.headers.get("content-length");
+      if (contentLength) {
+        const size = parseInt(contentLength, 10);
+        const bitrate = 128 * 1024;
+        return Math.round((size / bitrate) * 1000);
+      }
+    } catch {
+      return 0;
+    }
+  }
+  
   return new Promise((resolve) => {
     const a = new Audio();
-    a.preload = "metadata";
-    a.onloadedmetadata = () => resolve(isFinite(a.duration) ? Math.round(a.duration * 1000) : 0);
-    a.onerror = () => resolve(0);
+    a.onloadedmetadata = () => {
+      const dur = isFinite(a.duration) ? Math.round(a.duration * 1000) : 0;
+      a.src = "";
+      resolve(dur);
+    };
+    a.onerror = () => {
+      a.src = "";
+      resolve(0);
+    };
     a.src = url;
   });
 }
@@ -72,7 +92,13 @@ function App() {
       unsub = ctrl.store.subscribe((s: PlayerCoreState) => setState({ ...s }));
       setState({ ...ctrl.store.getState() });
     })();
-    return () => { unsub?.(); };
+    const handleBeforeUnload = () => revokePreviousUrls();
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      unsub?.();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      revokePreviousUrls();
+    };
   }, []);
 
   function revokePreviousUrls() {
