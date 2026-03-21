@@ -1,56 +1,124 @@
 name: Release
+
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
 jobs:
   build-tauri:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-22.04
+            label: linux
+          - os: macos-latest
+            label: macos
+          - os: windows-latest
+            label: windows
+
     runs-on: ${{ matrix.os }}
-    env:
-      NEURA_DIST_DIR: dist
-      NEURA_APP_NAME: neura
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - name: Compute npm cache dir
-        shell: bash
-        run: echo "NPM_CACHE_DIR=$(npm config get cache)" >> $GITHUB_ENV
+          node-version: '20'
+
       - name: Cache npm
         uses: actions/cache@v4
         with:
-          path: ${{ env.NPM_CACHE_DIR }}
+          path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
-      - name: Install Node deps
+
+      - name: Install Node dependencies
         run: npm ci
-      - name: Build core
+
+      - name: Build core TypeScript
         run: npm run build
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Compute cargo home
-        shell: bash
-        run: echo "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" >> $GITHUB_ENV
-      - name: Cache cargo registry+git
+
+      - name: Build UI
+        run: npm run ui:build
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.CARGO_HOME }}/registry
-            ${{ env.CARGO_HOME }}/git
+            ~/.cargo/registry
+            ~/.cargo/git
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             cargo-${{ runner.os }}-
-      - name: Build Tauri bundles
-        uses: tauri-apps/tauri-action@v2
+
+      - name: Cache Rust build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            tauri-plugin-neura-audio/target
+            src-tauri/target
+          key: target-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            target-${{ runner.os }}-
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libasound2-dev \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev
+
+      - name: Build and publish Tauri release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: src-tauri
-          args: '--ci'
-      - name: Upload artifacts
+          tagName: ${{ github.ref_name }}
+          releaseName: 'NEURA Desktop ${{ github.ref_name }}'
+          releaseBody: |
+            ## NEURA Desktop ${{ github.ref_name }}
+
+            Descarga el instalador para tu sistema operativo:
+
+            | Sistema | Archivo |
+            |---------|---------|
+            | Windows | `.msi` o `.exe` |
+            | macOS   | `.dmg` |
+            | Linux   | `.AppImage` o `.deb` |
+
+            > Los binarios son compilados automáticamente desde el código fuente.
+          releaseDraft: false
+          prerelease: false
+          args: --ci
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: neura-${{ matrix.os }}
-          path: src-tauri/target/**/bundle/**
+          name: neura-${{ matrix.label }}-${{ github.ref_name }}
+          path: |
+            src-tauri/target/**/bundle/msi/*.msi
+            src-tauri/target/**/bundle/nsis/*.exe
+            src-tauri/target/**/bundle/dmg/*.dmg
+            src-tauri/target/**/bundle/appimage/*.AppImage
+            src-tauri/target/**/bundle/deb/*.deb
+          if-no-files-found: warn
+          retention-days: 30

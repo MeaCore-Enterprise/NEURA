@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config-2.json",
   "build": {
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "npm run ui:build",
     "beforeDevCommand": "",
-    "devPath": "http://localhost:5173",
-    "distDir": "dist"
+    "devPath": "http://localhost:5000",
+    "distDir": "../dist"
   },
   "bundle": {
     "active": true,

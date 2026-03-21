@@ -1,45 +1,80 @@
 # NEURA Desktop
 
-A cross-platform audio player UI built with Preact + Vite, backed by a Tauri v2 native desktop app.
+Reproductor de audio de escritorio multiplataforma. Construido con Preact + Vite en el frontend y Tauri v2 + Rust en el backend nativo.
 
-## Architecture
+## Arquitectura
 
-- **`ui/`** — Preact frontend (Vite dev server, port 5000)
-- **`core/`** — TypeScript audio logic (engine abstraction, player state/reducers)
-- **`dist/`** — Compiled output from `tsc` (core) and `vite build` (UI)
-- **`src-tauri/`** — Tauri v2 Rust backend entry point
-- **`tauri-plugin-neura-audio/`** — Custom Rust plugin for native audio (Rodio/CPAL/Symphonia)
+- **`ui/`** — Frontend Preact (Vite dev server, puerto 5000)
+- **`core/`** — Lógica de audio en TypeScript (abstracción de motores, estado del reproductor)
+- **`dist/`** — Salida compilada de `tsc` (core) y `vite build` (UI)
+- **`src-tauri/`** — Backend Tauri v2 en Rust
+- **`tauri-plugin-neura-audio/`** — Plugin Rust para audio nativo (Rodio/CPAL/Symphonia)
 
-## Audio Engine Resolution
+## Componentes UI
 
-The `resolveAudioEngine()` function automatically picks:
-1. **NativeAudioEngine** — when running inside Tauri with the neura-audio plugin
-2. **TauriAudioEngine** (Web Audio) — browser fallback when no native plugin
-3. **MockAudioEngine** — last resort when Web Audio is unavailable
+| Archivo | Descripción |
+|---------|-------------|
+| `ui/src/main.tsx` | App principal, atajos de teclado, carga de tracks |
+| `ui/src/modules/TrackInfo.tsx` | Artwork + título + artista con animación |
+| `ui/src/modules/Visualizer.tsx` | Barras animadas CSS que responden al estado |
+| `ui/src/modules/ProgressBar.tsx` | Barra de progreso interactiva con seek y tiempo |
+| `ui/src/modules/PlayerControls.tsx` | Botones con iconos SVG (anterior/play-pause/siguiente) |
+| `ui/src/modules/VolumeControl.tsx` | Slider de volumen con icono mute |
+| `ui/src/modules/ModeSelector.tsx` | Selector Focus/Chill/Active con descripciones |
+| `ui/src/modules/TrackList.tsx` | Lista de reproducción clickeable con artista y duración |
 
-## Development
+## Motor de Audio (resolución automática)
+
+1. **NativeAudioEngine** — Cuando corre dentro de Tauri con el plugin neura-audio
+2. **TauriAudioEngine** (Web Audio HTML5) — Fallback en navegador
+3. **MockAudioEngine** — Último recurso
+
+## Atajos de Teclado
+
+| Tecla | Acción |
+|-------|--------|
+| `Space` / `K` | Play / Pause |
+| `→` / `L` | Pista siguiente |
+| `←` / `J` | Pista anterior |
+| `↑` | Subir volumen +5% |
+| `↓` | Bajar volumen -5% |
+
+## Desarrollo
 
 ```bash
-npm run ui:dev       # Start Vite dev server for the UI (port 5000)
-npm run ui:build     # Build the UI to dist/
-npm run build        # Compile core TypeScript (tsc)
+npm run ui:dev       # Servidor Vite UI (puerto 5000)
+npm run ui:build     # Compilar UI a dist/
+npm run build        # Compilar core TypeScript (tsc)
 ```
 
-## Workflow
+## GitHub Actions — Release automático
 
-- **Start application**: `npm run ui:dev` — runs the Vite dev server on port 5000
+El archivo `.github/workflows/release.yml` compila instaladores nativos para **Windows, macOS y Linux** automáticamente cuando se crea un tag con formato numérico:
 
-## Deployment
+```bash
+git tag 1.0
+git push origin 1.0
+```
 
-Configured as a **static** deployment:
-- Build: `npm run ui:build`
-- Public dir: `dist/`
+Esto genera:
+- Windows: `.msi` y `.exe`
+- macOS: `.dmg`
+- Linux: `.AppImage` y `.deb`
+
+Los artefactos se suben a un GitHub Release automáticamente.
+
+## Despliegue Tauri
+
+`tauri.conf.json` está configurado con:
+- `beforeBuildCommand`: `npm run ui:build`
+- `distDir`: `../dist`
+- `devPath`: `http://localhost:5000`
 
 ## Package Manager
 
 npm (Node.js 20)
 
-## Key Dependencies
+## Dependencias clave
 
 - preact ^10.20.2
 - vite ^5.4.8
