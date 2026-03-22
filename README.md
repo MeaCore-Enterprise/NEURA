@@ -1,4 +1,4 @@
-# NEURA Desktop 🎵
+ĺ# NEURA Desktop 🎵
 
 Un reproductor de audio multiplataforma profesional construido con **Tauri v2** y **Rust**, con interfaz moderna en **Preact + Vite**.
 
@@ -224,7 +224,6 @@ Este proyecto está bajo licencia **MIT**. Ver `LICENSE` para más detalles.
 
 ## Soporte
 
-- 📧 Email: support@neura.dev
 - 🐛 Issues: [GitHub Issues](https://github.com/tu-usuario/neura-desktop/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/tu-usuario/neura-desktop/discussions)
 
