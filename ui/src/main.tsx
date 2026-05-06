@@ -1,9 +1,8 @@
 import { render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { Track } from "./types.js";
-import type { PlayerCoreState } from "./types.js";
-import { PlayerController } from "../../dist/core/player/PlayerController.js";
-import { resolveAudioEngine } from "../../dist/core/audio/resolveAudioEngine.js";
+import type { Track, PlayerCoreState, ContextMode } from "./types.js";
+import { PlayerController } from "../../core/player/PlayerController.js";
+import { resolveAudioEngine } from "../../core/audio/resolveAudioEngine.js";
 import { PlayerControls } from "./modules/PlayerControls.js";
 import { ModeSelector } from "./modules/ModeSelector.js";
 import { Visualizer } from "./modules/Visualizer.js";
@@ -11,6 +10,20 @@ import { TrackInfo } from "./modules/TrackInfo.js";
 import { ProgressBar } from "./modules/ProgressBar.js";
 import { VolumeControl } from "./modules/VolumeControl.js";
 import { TrackList } from "./modules/TrackList.js";
+import { StatusBar } from "./modules/StatusBar.js";
+
+// ── Persistencia ─────────────────────────────────────────────────────────────
+const STORAGE_VOLUME = "neura:volume";
+const STORAGE_MODE   = "neura:mode";
+
+function loadVolume(): number {
+  try { const v = parseFloat(localStorage.getItem(STORAGE_VOLUME) ?? ""); return isFinite(v) ? Math.max(0, Math.min(1, v)) : 1; } catch { return 1; }
+}
+function loadMode(): ContextMode {
+  try { const m = localStorage.getItem(STORAGE_MODE); if (m === "FOCUS" || m === "CHILL" || m === "ACTIVE") return m; } catch {} return "ACTIVE";
+}
+function saveVolume(v: number) { try { localStorage.setItem(STORAGE_VOLUME, String(v)); } catch {} }
+function saveMode(m: ContextMode) { try { localStorage.setItem(STORAGE_MODE, m); } catch {} }
 
 function stemName(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
@@ -80,6 +93,7 @@ function App() {
   const [controller, setController] = useState<PlayerController | null>(null);
   const [state, setState] = useState<PlayerCoreState | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [errorDismissed, setErrorDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blobUrlsRef = useRef<string[]>([]);
 
@@ -88,8 +102,16 @@ function App() {
     (async () => {
       const engine = await resolveAudioEngine();
       const ctrl = new PlayerController(engine);
+      // Restaurar preferencias guardadas
+      const savedVolume = loadVolume();
+      const savedMode   = loadMode();
+      await ctrl.setVolume(savedVolume);
+      ctrl.setMode(savedMode);
       setController(ctrl);
-      unsub = ctrl.store.subscribe((s: PlayerCoreState) => setState({ ...s }));
+      unsub = ctrl.store.subscribe((s: PlayerCoreState) => {
+        setState({ ...s });
+        setErrorDismissed(false); // mostrar nuevo error si llega uno
+      });
       setState({ ...ctrl.store.getState() });
     })();
     const handleBeforeUnload = () => revokePreviousUrls();
@@ -185,6 +207,20 @@ function App() {
 
   const ready = controller && state;
 
+  function handleVolumeChange(v: number) {
+    controller!.setVolume(v);
+    saveVolume(v);
+  }
+
+  function handleModeChange(mode: ContextMode) {
+    controller!.setMode(mode);
+    saveMode(mode);
+  }
+
+  function dismissError() {
+    setErrorDismissed(true);
+  }
+
   return (
     <div class="neura-shell">
       <header class="neura-header">
@@ -196,6 +232,9 @@ function App() {
           <kbd>Space</kbd> play · <kbd>← →</kbd> pista · <kbd>↑ ↓</kbd> volumen
         </div>
       </header>
+      {ready && state!.error && !errorDismissed && (
+        <StatusBar state={state!} onDismissError={dismissError} />
+      )}
 
       <main class="neura-body">
         {ready ? (
@@ -211,10 +250,14 @@ function App() {
                 <PlayerControls controller={controller!} state={state!} />
                 <VolumeControl
                   volume={state!.volume}
-                  onVolumeChange={(v) => controller!.setVolume(v)}
+                  onVolumeChange={handleVolumeChange}
                 />
               </div>
-              <ModeSelector controller={controller!} state={state!} />
+              <ModeSelector
+                controller={controller!}
+                state={state!}
+                onModeChange={handleModeChange}
+              />
             </div>
 
             <div

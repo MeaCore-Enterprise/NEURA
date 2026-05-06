@@ -14,10 +14,17 @@ const MODES: {
 export function ModeSelector({
   controller,
   state,
+  onModeChange,
 }: {
   controller: any;
   state: PlayerCoreState;
+  onModeChange?: (mode: PlayerCoreState["mode"]) => void;
 }) {
+  function handleClick(key: PlayerCoreState["mode"]) {
+    controller.setMode(key);
+    onModeChange?.(key);
+  }
+
   return (
     <div class="mode-selector">
       <span class="mode-label">Modo</span>
@@ -26,7 +33,7 @@ export function ModeSelector({
           <button
             key={m.key}
             class={`mode-btn ${state.mode === m.key ? "active" : ""}`}
-            onClick={() => controller.setMode(m.key)}
+            onClick={() => handleClick(m.key)}
             title={m.desc}
           >
             <span class="mode-icon">{m.icon}</span>
@@ -40,3 +47,4 @@ export function ModeSelector({
     </div>
   );
 }
+

@@ -97,7 +97,11 @@ export class PlayerController {
     if (s.mode === "CHILL") {
       if (s.tracklist.length <= 1) return currentIndex;
       let idx = currentIndex;
-      while (idx === currentIndex) idx = Math.floor(Math.random() * s.tracklist.length);
+      let attempts = 0;
+      while (idx === currentIndex && attempts < 20) {
+        idx = Math.floor(Math.random() * s.tracklist.length);
+        attempts++;
+      }
       return idx;
     }
     const next = currentIndex + 1;

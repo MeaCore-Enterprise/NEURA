@@ -826,6 +826,82 @@ kbd {
   animation: spin 0.8s linear infinite;
 }
 
+/* ── Error Bar ────────────────────────────────── */
+
+.error-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background: rgba(248, 113, 113, 0.12);
+  border-bottom: 1px solid rgba(248, 113, 113, 0.3);
+  animation: slideDown 0.25s ease;
+  z-index: 5;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.error-bar-icon {
+  font-size: 16px;
+  color: var(--error);
+  flex-shrink: 0;
+}
+
+.error-bar-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.error-bar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--error);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.error-bar-message {
+  font-size: 13px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.error-bar-code {
+  font-size: 11px;
+  color: var(--fg-dim);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.error-bar-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--error);
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.error-bar-dismiss:hover {
+  background: rgba(248, 113, 113, 0.3);
+}
+
 /* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 700px) {
@@ -848,3 +924,4 @@ kbd {
     display: none;
   }
 }
+
